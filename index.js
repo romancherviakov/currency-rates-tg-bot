@@ -7,10 +7,16 @@ const constants = require("./constants");
 const healthController = require("./controllers/healthController");
 const callbackController = require("./controllers/callbackController");
 
+const userService = require("./services/userService");
+
+const db = require("./models");
+
 const container = awilix.createContainer({
     injectionMode: awilix.InjectionMode.PROXY
 });
 container.register({
+    db: awilix.asValue(db),
+    userService: awilix.asFunction(userService),
     healthController: awilix.asFunction(healthController),
     callbackController: awilix.asFunction(callbackController)
 });
