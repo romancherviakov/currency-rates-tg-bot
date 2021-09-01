@@ -42,7 +42,7 @@ module.exports = function({userService, logger, currencyService, telegramApiServ
                 });
                 logger.info('Subscribed user', user.toJSON());
 
-                await telegramApiService.sendIntroMessage(body.message.from.id);
+                await telegramApiService.sendIntroMessage(body.message.from.id)
             }
             
             if (command == constants.GET_CURRENCY_RATES) {
