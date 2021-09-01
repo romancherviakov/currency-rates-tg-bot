@@ -3,20 +3,42 @@ const isEmpty = require("lodash/isEmpty");
 const express = require("express");
 const awilix = require('awilix');
 const constants = require("./constants");
+const axios = require("axios");
+const winston = require('winston');
 
 const healthController = require("./controllers/healthController");
 const callbackController = require("./controllers/callbackController");
 
 const userService = require("./services/userService");
-
 const db = require("./models");
+const currencyService = require('./services/currencyService');
+const telegramApiService = require('./services/telegramApiService');
+
+const logger = winston.createLogger({
+    level: 'info',
+    format: winston.format.json(),
+    transports: [
+      new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
+      new winston.transports.File({ filename: 'logs/combined.log' }),
+      new winston.transports.Console({
+        format: winston.format.combine(
+          winston.format.colorize(),
+          winston.format.simple()
+        )
+      })
+    ],
+});
 
 const container = awilix.createContainer({
     injectionMode: awilix.InjectionMode.PROXY
 });
 container.register({
+    axios: awilix.asValue(axios),
+    logger: awilix.asValue(logger),
     db: awilix.asValue(db),
     userService: awilix.asFunction(userService),
+    currencyService: awilix.asFunction(currencyService),
+    telegramApiService: awilix.asFunction(telegramApiService),
     healthController: awilix.asFunction(healthController),
     callbackController: awilix.asFunction(callbackController)
 });
@@ -24,10 +46,8 @@ container.register({
 const app = express();
 app.use(express.json());
 
-const port = isEmpty(process.env.EXPRESS_PORT) ? constants.DEFAULT_EXPRESS_PORT : process.env.EXPRESS_PORT;
-
-
 app.get('/_health', (req, res) => container.resolve('healthController').indexAction(req, res));
 app.post('/callback', (req,res) => container.resolve('callbackController').callbackAction(req, res));
 
+const port = isEmpty(process.env.EXPRESS_PORT) ? constants.DEFAULT_EXPRESS_PORT : process.env.EXPRESS_PORT;
 app.listen(port, () => console.log(`Started server on ${port} port`));

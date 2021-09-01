@@ -1,6 +1,6 @@
 module.exports = function({db}) {
     return {
-        createUser: async function(userData) {
+        subscribeUser: async function(userData) {
             let user = await db.User.findOne({ where: { chatId: userData.chatId } });
 
             if (!user) {
