@@ -7,25 +7,46 @@ const monobankCurrencyCodes = {
     'EUR': 978,
     'UAH': 980
 }
-const { setupCache } = require("axios-cache-adapter");
+const CACHE_TTL_MINUTES = 10;
+const moment = require("moment");
+
+let monobankCurrencyRatesCached = {};
+let nationalBankCurrencyRates = {};
 
 module.exports = function({logger, axios}) {
 
-    const getRequest = async function(url) {
-        const cache = setupCache({ maxAge: 15 * 60 * 1000 });
-        const api = axios.create({ adapter: cache.adapter});
-        const length = await cache.store.length();
-        console.log('Cache store length:', length);
-        return api({ url, method: 'get'});
-    }
-
     return {
+        getMonobankCurrencyRatesCached: async function() {
+            logger.info('Reading monobank currencies from cache...');
+            let now = moment();
+            if (isEmpty(monobankCurrencyRatesCached)) {
+                let rates = await this.getMonobankCurrencyRates();
+                monobankCurrencyRatesCached = {
+                    rates,
+                    time: moment(),
+                }
+            }
+
+            let cacheTime = monobankCurrencyRatesCached.time;
+            let duration = moment.duration(cacheTime.diff(now));
+            if (duration.asMinutes() > CACHE_TTL_MINUTES) {
+                logger.info('Monobank currencies cache expired');
+                let rates = await getMonobankCurrencyRates();
+                monobankCurrencyRatesCached = {
+                    rates,
+                    time: moment(),
+                }
+            }
+
+            return monobankCurrencyRatesCached.rates;
+        },
+
         getMonobankCurrencyRates: async function() {
             let currencyRates = [];
             let response;
             logger.info('Sending monobank get currency request...');
             try {
-                response = await getRequest(MONOBANK_CURRENCY_RATES_URI);
+                response = await axios.get(MONOBANK_CURRENCY_RATES_URI);
             } catch(err) {
                 logger.error('Unable to receive monobank rates: ' + err.message);
                 return currencyRates;
@@ -65,7 +86,7 @@ module.exports = function({logger, axios}) {
             let response;
             logger.info('Sending national bank get currency request...');
             try {
-                response = await getRequest(NATIONAL_BANK_RATES_URI);
+                response = await axios.get(NATIONAL_BANK_RATES_URI);
             } catch(err) {
                 logger.error('Unable to receive national bank rates: ' + err.message);
                 return currencyRates;

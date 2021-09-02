@@ -46,29 +46,24 @@ module.exports = function({userService, logger, currencyService, telegramApiServ
                     return {errors, status: 442};
                 }
 
-                let nationalBankRates = await currencyService.getNationalBankCurrencyRates();
-                console.log(nationalBankRates);
-                
-                //await new Promise(resolve => setTimeout(resolve, 5000));
-                let monobankRates = await currencyService.getMonobankCurrencyRates();
-                console.log(monobankRates)
-
-                if (isEmpty(monobankRates) || isEmpty(nationalBankRates)) {
+                let ratesCollection = [];
+                let [ nationalBankRates, monobankRates ] = await Promise.all([
+                    currencyService.getNationalBankCurrencyRates(),
+                    currencyService.getMonobankCurrencyRatesCached()
+                ]);
+            
+                if (!isEmpty(nationalBankRates)) {
+                    ratesCollection.push({ 'title': 'national_bank', 'rates': nationalBankRates });
+                }
+                if (!isEmpty(monobankRates)) {
+                    ratesCollection.push({ 'title': 'monobank', 'rates': monobankRates });
+                }
+                if (isEmpty(ratesCollection)) {
                     await telegramApiService.notifyErrorMessageByChatId(requestData.message.from.id, "rates_not_found");
-
                     return {status: 404, message: "Rates not received"};
                 }
-
-                await telegramApiService.notifyByChatId(requestData.message.from.id, [
-                    {
-                        'title': 'monobank',
-                        'rates': monobankRates,
-                    },
-                    {
-                        'title': 'national_bank',
-                        'rates': nationalBankRates,
-                    }
-                ]);
+        
+                await telegramApiService.notifyByChatId(requestData.message.from.id, ratesCollection);
             }
 
             return {status: 200};
