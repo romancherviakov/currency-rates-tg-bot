@@ -9,14 +9,22 @@ const monobankCurrencyCodes = {
 module.exports = function({logger, axios}) {
     return {
         getMonobankCurrencyRates: async function() {
-            logger.info('Sending monobank get currency request...');
-            let response = await axios.get(MONOBANK_CURRENCY_RATES_URI);
-
             let currencyRates = [];
+            let response;
+            logger.info('Sending monobank get currency request...');
+            try {
+                response = await axios.get(MONOBANK_CURRENCY_RATES_URI);
+            } catch(err) {
+                logger.error('Unable to receive monobank rates: ' + err.message);
+                return currencyRates;
+            }
 
             if (isArray(response.data)) {
                 for (const item of response.data) {
-                    if (item.currencyCodeA == monobankCurrencyCodes['USD'] && item.currencyCodeB == monobankCurrencyCodes['UAH']) {
+                    if (
+                        item.currencyCodeA === monobankCurrencyCodes['USD'] 
+                        && item.currencyCodeB === monobankCurrencyCodes['UAH']
+                    ) {
                         currencyRates.push({
                             currency: 'USD',
                             sell: item.rateSell,
@@ -24,7 +32,10 @@ module.exports = function({logger, axios}) {
                         });
                     }
 
-                    if (item.currencyCodeA == monobankCurrencyCodes['EUR'] && item.currencyCodeB == monobankCurrencyCodes['UAH']) {
+                    if (
+                        item.currencyCodeA === monobankCurrencyCodes['EUR']
+                        && item.currencyCodeB === monobankCurrencyCodes['UAH']
+                    ) {
                         currencyRates.push({
                             currency: 'EUR',
                             sell: item.rateSell,

@@ -2,20 +2,34 @@ const moment = require('moment');
 const titles = {
     "monobank": "Монобанк",
 };
+const telegramSendMessageAPI = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
 
 module.exports = function({logger, axios}) {
     const sendTelegramMessage = async function(chatId, message) {
-        let telegramSendMessageAPI = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
-        let res = await axios.get(telegramSendMessageAPI, {
-            params: {
-                chat_id: chatId,
-                text: message
-            }
-        });
-
-        return res;
+        try {
+            await axios.get(telegramSendMessageAPI, {
+                params: {
+                    chat_id: chatId,
+                    text: message
+                }
+            });
+        } catch (err) {
+            logger.error("Unable to sent message", err.message);
+        }
     }
 
+    const prepareMessage = function(ratesCollections) {
+        let message = `Курс валют на сьогодні ${moment().format('DD/MM/YYYY')}: \n\n`;
+        for (const rateCollection of ratesCollections) {
+            message += titles[rateCollection.title] + ":\n";
+            for (const rate of rateCollection.rates) {
+                message+= `${rate.currency} продаж: ${rate.sell}, купівля: ${rate.buy}\n`;
+            }
+            message += "\n";
+        }
+        return message;
+    }
+    
     return {
         notifyByChatId: async function(chatId, ratesCollections) {
             logger.info(`Notifying user by chat id: ${chatId}`);
@@ -28,19 +42,4 @@ module.exports = function({logger, axios}) {
             await sendTelegramMessage(chatId, message);
         }
     }
-}
-
-function prepareMessage(ratesCollections) {
-    let title;
-    let message = `Курс валют на сьогодні ${moment().format('MM/DD/YYYY')}: \n\n`;
-    for (const rateCollection of ratesCollections) {
-        title = titles[rateCollection.title];
-        message += title + ":\n";
-        for (const rate of rateCollection.rates) {
-            message+= `${rate.currency} продаж: ${rate.sell}, купівля: ${rate.buy}\n`;
-        }
-        message += "\n";
-    }
-
-    return message;
 }

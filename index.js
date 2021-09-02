@@ -30,7 +30,7 @@ const logger = winston.createLogger({
 });
 
 const container = awilix.createContainer({
-    injectionMode: awilix.InjectionMode.PROXY
+  injectionMode: awilix.InjectionMode.PROXY
 });
 container.register({
     axios: awilix.asValue(axios),
@@ -50,4 +50,24 @@ app.get('/_health', (req, res) => container.resolve('healthController').indexAct
 app.post('/callback', (req,res) => container.resolve('callbackController').callbackAction(req, res));
 
 const port = isEmpty(process.env.EXPRESS_PORT) ? constants.DEFAULT_EXPRESS_PORT : process.env.EXPRESS_PORT;
-app.listen(port, () => console.log(`Started server on ${port} port`));
+const server = app.listen(port, () => console.log(`Started server on ${port} port`));
+
+process.on('SIGTERM', () => {
+  logger.error('Shutting down application...');
+  server.close().then(() => {
+    db.sequelize.close().then(() => {
+      process.exit(0);
+    });
+  });
+});
+
+process.on('uncaughtException', (err) => {
+  logger.error('Shutting down application due Unhandled exception...');
+  logger.error(err.message);
+  logger.error(err.stack);
+  server.close().then(() => {
+    db.sequelize.close().then(() => {
+      process.exit(0);
+    });
+  });
+});
