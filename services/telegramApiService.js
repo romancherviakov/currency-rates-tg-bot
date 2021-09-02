@@ -1,6 +1,8 @@
 const moment = require('moment');
 const titles = {
     "monobank": "Монобанк",
+    "national_bank": "Національний банк України",
+    "rates_not_found": "Не вдалось отримати дані. Спробуйте пізніше"
 };
 const telegramSendMessageAPI = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
 
@@ -39,6 +41,11 @@ module.exports = function({logger, axios}) {
         sendIntroMessage: async function(chatId) {
             logger.info(`Welcome user by chat id: ${chatId}`);
             let message = "Я телеграм бот для отримання курсу валют.\n /rates - отримати актуальний курс";
+            await sendTelegramMessage(chatId, message);
+        },
+        notifyErrorMessageByChatId: async function(chatId, messageTitle) {
+            let message = titles[messageTitle];
+            logger.error(`Notifying chat id ${chatId} error: ${message}`);
             await sendTelegramMessage(chatId, message);
         }
     }
