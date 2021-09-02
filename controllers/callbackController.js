@@ -15,47 +15,40 @@ const checkUserDataValidator = v.compile({
 
 
 module.exports = function({userService, logger, currencyService, telegramApiService}) {
-    const handleValidationErrorResponse = (errors) => {
-        logger.error('Unprocessable message data', {errors});
-        res.send({status: 442, message: 'Validation error', errors});
-        return;
-    }
-
     return {
-        callbackAction: async (req, res) => {
-            let body = req.body;
-            logger.info(`Received callback ${JSON.stringify(body)}`);
-            console.log(body); // <- test
-
-            if (isEmpty(body) || isEmpty(body.message) || isEmpty(body.message.text)) {
+        callbackAction: async (requestData) => {
+            logger.info(`Received request data ${JSON.stringify(requestData)}`);
+            if (isEmpty(requestData) || isEmpty(requestData.message) || isEmpty(requestData.message.text)) {
                 logger.info('Ignoring callback request');
-                res.send({status: 200});
-                return;
+                return {status: 200};
             }
 
-            let command = body.message.text;
-
-            if (command === constants.START_COMMAND) {
-                let errors = checkUserDataValidator(body.message.from);
+            if (constants.START_COMMAND === requestData.message.text) {
+                let errors = checkUserDataValidator(requestData.message.from);
                 if (!isEmpty(errors)) {
-                    return handleValidationErrorResponse(errors);
+                    return {errors, status: 442};
                 }
-                let user = await userService.subscribeUser({
-                    chatId: body.message.from.id,
-                    firstName: body.message.from.first_name,
-                    lastName: body.message.from.last_name
+
+                let user = await userService.createUserIfNotExists({
+                    chatId: requestData.message.from.id,
+                    firstName: requestData.message.from.first_name,
+                    lastName: requestData.message.from.last_name
                 });
+
                 logger.info('Subscribed user', user.toJSON());
-                await telegramApiService.sendIntroMessage(body.message.from.id);
+
+                await telegramApiService.sendIntroMessage(requestData.message.from.id);
             }
             
-            if (command === constants.GET_CURRENCY_RATES) {
-                let errors = checkGetRatesDataValidator(body.message.from);
+            if (constants.GET_CURRENCY_RATES === requestData.message.text) {
+                let errors = checkGetRatesDataValidator(requestData.message.from);
                 if (!isEmpty(errors)) {
-                    return handleValidationErrorResponse(errors);
+                    return {errors, status: 442};
                 }
+
                 let monobankRates = await currencyService.getMonobankCurrencyRates();
-                await telegramApiService.notifyByChatId(body.message.from.id, [
+
+                await telegramApiService.notifyByChatId(requestData.message.from.id, [
                     {
                         'title': 'monobank',
                         'rates': monobankRates,
@@ -63,7 +56,7 @@ module.exports = function({userService, logger, currencyService, telegramApiServ
                 ]);
             }
 
-            res.send({status: 200})
+            return {status: 200};
         }
     }
 }

@@ -14,6 +14,8 @@ const db = require("./models");
 const currencyService = require('./services/currencyService');
 const telegramApiService = require('./services/telegramApiService');
 
+const routing = require('./routing');
+
 const logger = winston.createLogger({
     level: 'info',
     format: winston.format.json(),
@@ -46,28 +48,27 @@ container.register({
 const app = express();
 app.use(express.json());
 
-app.get('/_health', (req, res) => container.resolve('healthController').indexAction(req, res));
-app.post('/callback', (req,res) => container.resolve('callbackController').callbackAction(req, res));
+routing(container, app);
 
 const port = isEmpty(process.env.EXPRESS_PORT) ? constants.DEFAULT_EXPRESS_PORT : process.env.EXPRESS_PORT;
 const server = app.listen(port, () => console.log(`Started server on ${port} port`));
 
 process.on('SIGTERM', () => {
-  logger.error('Shutting down application...');
-  server.close().then(() => {
-    db.sequelize.close().then(() => {
-      process.exit(0);
-    });
-  });
-});
+  logger.info('SIGTERM received');
+  shutDownHandler();
+})
 
 process.on('uncaughtException', (err) => {
   logger.error('Shutting down application due Unhandled exception...');
   logger.error(err.message);
   logger.error(err.stack);
-  server.close().then(() => {
+  shutDownHandler();
+});
+
+const shutDownHandler = function() {
+  server.close(() => {
     db.sequelize.close().then(() => {
       process.exit(0);
     });
   });
-});
+}
