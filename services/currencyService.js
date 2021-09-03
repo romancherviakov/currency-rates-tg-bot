@@ -2,6 +2,9 @@ const { isEmpty } = require("lodash");
 const isArray = require("lodash/isArray")
 const MONOBANK_CURRENCY_RATES_URI = 'https://api.monobank.ua/bank/currency';
 const NATIONAL_BANK_RATES_URI = 'https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json';
+const PRIVAT_BANK_RATES_URI = 'https://api.privatbank.ua/p24api/pubinfo?json&exchange&coursid=5';
+const PRIVAT_BANK_CARD_RATES_URI = 'https://api.privatbank.ua/p24api/pubinfo?exchange&json&coursid=11';
+
 const monobankCurrencyCodes = {
     'USD': 840,
     'EUR': 978,
@@ -16,6 +19,43 @@ let nationalBankCurrencyRates = {};
 module.exports = function({logger, axios}) {
 
     return {
+        getAllCurrencyRates: async function() {
+            let ratesCollection = [];
+            let [ 
+                nationalBankRates,
+                monobankRates,
+                privatBankRates,
+                privatbankCardRates,
+            ] = await Promise.all([
+                this.getNationalBankCurrencyRates(),
+                this.getMonobankCurrencyRatesCached(),
+                this.getPrivatBankRates(),
+                this.getPrivatBankRatesCard(),
+            ]);
+
+            if (!isEmpty(nationalBankRates)) {
+                ratesCollection.push({ 'title': 'national_bank', 'rates': nationalBankRates });
+            }
+
+            if (!isEmpty(monobankRates)) {
+                ratesCollection.push({ 'title': 'monobank', 'rates': monobankRates });
+            }
+
+            if (!isEmpty(privatBankRates)) {
+                ratesCollection.push({ 'title': 'privat_bank', 'rates': privatBankRates });
+            }
+
+            if (!isEmpty(privatbankCardRates)) {
+                ratesCollection.push({ 'title': 'privat_bank_card', 'rates': privatbankCardRates });
+            }
+
+            if(isEmpty(ratesCollection)) {
+                throw new Error(`Unable to receive any rates`);
+            }
+
+            return ratesCollection;
+        },
+
         getMonobankCurrencyRatesCached: async function() {
             logger.info('Reading monobank currencies from cache...');
             let now = moment();
@@ -107,6 +147,53 @@ module.exports = function({logger, axios}) {
                             currency: 'EUR',
                             sell: item.rate,
                             buy: '-'
+                        });
+                    }
+                }
+            }
+
+            return currencyRates;
+        },
+
+        getPrivatBankRates: async function() {
+            logger.info('Reading privat bank currencies...');
+            try {
+                return this._privateBankApiCall(PRIVAT_BANK_RATES_URI);
+            } catch(err) {
+                logger.error('Unable to receive privat bank rates: ' + err.message);
+                return [];
+            }
+        },
+
+        getPrivatBankRatesCard: async function() {
+            logger.info('Reading privat bank card currencies...');
+            try {
+                return this._privateBankApiCall(PRIVAT_BANK_CARD_RATES_URI);
+            } catch(err) {
+                logger.error('Unable to receive privat bank rates: ' + err.message);
+                return [];
+            }
+        },
+
+        _privateBankApiCall: async function(uri) {
+            let currencyRates = [];
+            let response = await axios.get(PRIVAT_BANK_RATES_URI);
+        
+            if (isArray(response.data)) {
+                for (const item of response.data) {
+                    if (item.ccy === 'USD') {
+                        currencyRates.push({
+                            currency: 'USD',
+                            sell: item.sale,
+                            buy: item.buy,
+                        });
+                    }
+
+                    if (item.ccy === 'EUR') {
+                        currencyRates.push({
+                            currency: 'EUR',
+                            sell: item.sale,
+                            buy: item.buy,
                         });
                     }
                 }

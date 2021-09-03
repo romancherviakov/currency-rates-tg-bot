@@ -5,6 +5,7 @@ const awilix = require('awilix');
 const constants = require("./constants");
 const axios = require("axios");
 const winston = require('winston');
+const moment = require("moment");
 
 const healthController = require("./controllers/healthController");
 const callbackController = require("./controllers/callbackController");
@@ -52,6 +53,25 @@ routing(container, app);
 
 const port = isEmpty(process.env.EXPRESS_PORT) ? constants.DEFAULT_EXPRESS_PORT : process.env.EXPRESS_PORT;
 const server = app.listen(port, () => console.log(`Started server on ${port} port`));
+
+const ratesSchedule = [
+  '10:00',
+];
+
+setInterval(async function() {
+  try {
+    let now = moment().format('H:m');
+    if (ratesSchedule.includes(now)) {
+      let users = await container.resolve('userService').getAllUsers();
+      let ratesCollection = await container.resolve('currencyService').getAllCurrencyRates();
+      await Promise.all(users.map(async (user) => {
+        await container.resolve('telegramApiService').notifyByChatId(user.chatId, ratesCollection);
+      }));
+    }
+  } catch (err) {
+      logger.error(err.message);
+  }
+}, 1000*60);
 
 process.on('SIGTERM', () => {
   logger.info('SIGTERM received');

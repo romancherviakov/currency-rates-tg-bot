@@ -2,7 +2,9 @@ const moment = require('moment');
 const titles = {
     "monobank": "Монобанк",
     "national_bank": "Національний банк України",
-    "rates_not_found": "Не вдалось отримати дані. Спробуйте пізніше"
+    "rates_not_found": "Не вдалось отримати дані. Спробуйте пізніше",
+    'privat_bank': 'Приват банк у відділеннях',
+    'privat_bank_card': 'Приват банк безготівкові операції',
 };
 const telegramSendMessageAPI = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
 

@@ -28,15 +28,12 @@ module.exports = function({userService, logger, currencyService, telegramApiServ
                 if (!isEmpty(errors)) {
                     return {errors, status: 442};
                 }
-
                 let user = await userService.createUserIfNotExists({
                     chatId: requestData.message.from.id,
                     firstName: requestData.message.from.first_name,
                     lastName: requestData.message.from.last_name
                 });
-
                 logger.info('Subscribed user', user.toJSON());
-
                 await telegramApiService.sendIntroMessage(requestData.message.from.id);
             }
             
@@ -45,24 +42,14 @@ module.exports = function({userService, logger, currencyService, telegramApiServ
                 if (!isEmpty(errors)) {
                     return {errors, status: 442};
                 }
-
                 let ratesCollection = [];
-                let [ nationalBankRates, monobankRates ] = await Promise.all([
-                    currencyService.getNationalBankCurrencyRates(),
-                    currencyService.getMonobankCurrencyRatesCached()
-                ]);
-            
-                if (!isEmpty(nationalBankRates)) {
-                    ratesCollection.push({ 'title': 'national_bank', 'rates': nationalBankRates });
-                }
-                if (!isEmpty(monobankRates)) {
-                    ratesCollection.push({ 'title': 'monobank', 'rates': monobankRates });
-                }
-                if (isEmpty(ratesCollection)) {
+                try {
+                    ratesCollection = await currencyService.getAllCurrencyRates();
+                } catch (err) {
+                    logger.error(err.message);
                     await telegramApiService.notifyErrorMessageByChatId(requestData.message.from.id, "rates_not_found");
                     return {status: 404, message: "Rates not received"};
                 }
-        
                 await telegramApiService.notifyByChatId(requestData.message.from.id, ratesCollection);
             }
 

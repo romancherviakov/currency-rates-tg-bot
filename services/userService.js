@@ -6,6 +6,9 @@ module.exports = function({db}) {
                 user = await db.User.create(userData);
             }
             return user;
+        },
+        getAllUsers: async function() {
+            return db.User.findAll();
         }
     }
 }
