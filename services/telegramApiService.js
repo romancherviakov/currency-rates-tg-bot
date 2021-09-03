@@ -9,12 +9,17 @@ const titles = {
 const telegramSendMessageAPI = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
 
 module.exports = function({logger, axios}) {
+    const roundTwoDecimals = (value) => {
+        return Math.round(value * 100) / 100;
+    }
+
     const sendTelegramMessage = async function(chatId, message) {
         try {
             await axios.get(telegramSendMessageAPI, {
                 params: {
                     chat_id: chatId,
-                    text: message
+                    text: message,
+                    parse_mode: 'html'
                 }
             });
         } catch (err) {
@@ -27,7 +32,9 @@ module.exports = function({logger, axios}) {
         for (const rateCollection of ratesCollections) {
             message += titles[rateCollection.title] + ":\n";
             for (const rate of rateCollection.rates) {
-                message+= `${rate.currency} продаж: ${rate.sell}, купівля: ${rate.buy}\n`;
+                let sell = rate.sell === '-' ? '-' : roundTwoDecimals(rate.sell);
+                let buy = rate.buy === '-' ? '-' : roundTwoDecimals(rate.buy);
+                message+= `${rate.currency} продаж: <b>${sell}</b>, купівля: <b>${buy}</b>\n`;
             }
             message += "\n";
         }
