@@ -1,59 +1,64 @@
 const isEmpty = require("lodash/isEmpty");
 const Validator = require("fastest-validator");
-const constants = require('./../constants');
 const v = new Validator();
 
-const checkUserDataValidator = v.compile({
-    id: { type: "number", positive: true, integer: true },
-    first_name: { type: "string" },
-    last_name: { type: "string" }
- });
+const validationSchemas = {
+    start: {
+        id: { type: "number", positive: true, integer: true },
+        first_name: { type: "string" },
+        last_name: { type: "string" }
+    },
+    rates: {
+        id: { type: "number", positive: true, integer: true }
+    },
+};
 
- const checkGetRatesDataValidator = v.compile({
-    id: { type: "number", positive: true, integer: true }
- });
-
+const START_COMMAND = '/start';
+const GET_CURRENCY_RATES = '/rates';
 
 module.exports = function({userService, logger, currencyService, telegramApiService}) {
     return {
-        callbackAction: async (requestData) => {
+        callbackAction: async (req, res) => {
+            let requestData = req.body;
             logger.info(`Received request data ${JSON.stringify(requestData)}`);
-            if (isEmpty(requestData) || isEmpty(requestData.message) || isEmpty(requestData.message.text)) {
+
+            if (
+                isEmpty(requestData) ||
+                isEmpty(requestData.message) ||
+                isEmpty(requestData.message.text)
+            ) {
                 logger.info('Ignoring callback request');
-                return {status: 200};
+                return res.send({status: 200});
             }
 
-            if (constants.START_COMMAND === requestData.message.text) {
-                let errors = checkUserDataValidator(requestData.message.from);
+            if (START_COMMAND === requestData.message.text) {
+                let errors = v.compile(validationSchemas.start)(requestData.message.from);
                 if (!isEmpty(errors)) {
-                    return {errors, status: 442};
+                    return res.send({errors, status: 442});
                 }
-                let user = await userService.createUserIfNotExists({
-                    chatId: requestData.message.from.id,
-                    firstName: requestData.message.from.first_name,
-                    lastName: requestData.message.from.last_name
-                });
+
+                let user = await userService.createUserFromRequest(requestData);
                 logger.info('Subscribed user', user.toJSON());
                 await telegramApiService.sendIntroMessage(requestData.message.from.id);
             }
             
-            if (constants.GET_CURRENCY_RATES === requestData.message.text) {
-                let errors = checkGetRatesDataValidator(requestData.message.from);
+            if (GET_CURRENCY_RATES === requestData.message.text) {
+                let errors = v.compile(validationSchemas.rates)(requestData.message.from);
                 if (!isEmpty(errors)) {
-                    return {errors, status: 442};
+                    return res.send({errors, status: 442});
                 }
-                let ratesCollection = [];
+
                 try {
-                    ratesCollection = await currencyService.getAllCurrencyRates();
+                    let ratesCollection = await currencyService.getAllCurrencyRates();
+                    await telegramApiService.notifyByChatId(requestData.message.from.id, ratesCollection);
                 } catch (err) {
                     logger.error(err.message);
                     await telegramApiService.notifyErrorMessageByChatId(requestData.message.from.id, "rates_not_found");
-                    return {status: 404, message: "Rates not received"};
+                    return res.send({status: 404, message: "Rates not received"});
                 }
-                await telegramApiService.notifyByChatId(requestData.message.from.id, ratesCollection);
             }
 
-            return {status: 200};
+            return res.send({status: 200});
         }
     }
 }

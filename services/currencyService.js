@@ -4,7 +4,6 @@ const MONOBANK_CURRENCY_RATES_URI = 'https://api.monobank.ua/bank/currency';
 const NATIONAL_BANK_RATES_URI = 'https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json';
 const PRIVAT_BANK_RATES_URI = 'https://api.privatbank.ua/p24api/pubinfo?json&exchange&coursid=5';
 const PRIVAT_BANK_CARD_RATES_URI = 'https://api.privatbank.ua/p24api/pubinfo?exchange&json&coursid=11';
-
 const monobankCurrencyCodes = {
     'USD': 840,
     'EUR': 978,
@@ -12,12 +11,11 @@ const monobankCurrencyCodes = {
 }
 const CACHE_TTL_MINUTES = 10;
 const moment = require("moment");
+const { NATIONAL_BANK_TITLE, PRIVAT_BANK_TITLE, MONOBANK_TITLE, PRIVAT_BANK_CARD_TITLE} = require("../constants");
 
 let monobankCurrencyRatesCached = {};
-let nationalBankCurrencyRates = {};
 
 module.exports = function({logger, axios}) {
-
     return {
         getAllCurrencyRates: async function() {
             let ratesCollection = [];
@@ -34,19 +32,19 @@ module.exports = function({logger, axios}) {
             ]);
 
             if (!isEmpty(nationalBankRates)) {
-                ratesCollection.push({ 'title': 'national_bank', 'rates': nationalBankRates });
+                ratesCollection.push({ 'title': NATIONAL_BANK_TITLE, 'rates': nationalBankRates });
             }
 
             if (!isEmpty(monobankRates)) {
-                ratesCollection.push({ 'title': 'monobank', 'rates': monobankRates });
+                ratesCollection.push({ 'title': MONOBANK_TITLE, 'rates': monobankRates });
             }
 
             if (!isEmpty(privatBankRates)) {
-                ratesCollection.push({ 'title': 'privat_bank', 'rates': privatBankRates });
+                ratesCollection.push({ 'title': PRIVAT_BANK_TITLE, 'rates': privatBankRates });
             }
 
             if (!isEmpty(privatbankCardRates)) {
-                ratesCollection.push({ 'title': 'privat_bank_card', 'rates': privatbankCardRates });
+                ratesCollection.push({ 'title': PRIVAT_BANK_CARD_TITLE, 'rates': privatbankCardRates });
             }
 
             if(isEmpty(ratesCollection)) {

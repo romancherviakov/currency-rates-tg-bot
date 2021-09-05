@@ -7,6 +7,13 @@ module.exports = function({db}) {
             }
             return user;
         },
+        createUserFromRequest: async function(requestData) {
+            return this.createUserIfNotExists({
+                chatId: requestData.message.from.id,
+                firstName: requestData.message.from.first_name,
+                lastName: requestData.message.from.last_name
+            });
+        },
         getAllUsers: async function() {
             return db.User.findAll();
         }

@@ -1,8 +1,6 @@
 module.exports = {
-    DEFAULT_EXPRESS_PORT: 8000,
-
-    START_COMMAND: '/start',
-    GET_CURRENCY_RATES: '/rates',
-
-    MONOBANK_RATES_NAME: 'Monobank',
-}
+    NATIONAL_BANK_TITLE: 'national_bank',
+    PRIVAT_BANK_TITLE: 'privat_bank',
+    MONOBANK_TITLE: 'monobank',
+    PRIVAT_BANK_CARD_TITLE: 'privat_bank_card',
+};
