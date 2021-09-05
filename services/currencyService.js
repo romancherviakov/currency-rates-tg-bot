@@ -11,7 +11,13 @@ const monobankCurrencyCodes = {
 }
 const CACHE_TTL_MINUTES = 10;
 const moment = require("moment");
-const { NATIONAL_BANK_TITLE, PRIVAT_BANK_TITLE, MONOBANK_TITLE, PRIVAT_BANK_CARD_TITLE} = require("../constants");
+const { 
+    NATIONAL_BANK_TITLE,
+    PRIVAT_BANK_TITLE,
+    MONOBANK_TITLE,
+    PRIVAT_BANK_CARD_TITLE,
+    MISSING_RATE_VALUE,
+} = require("../constants");
 
 let monobankCurrencyRatesCached = {};
 
@@ -136,7 +142,7 @@ module.exports = function({logger, axios}) {
                         currencyRates.push({
                             currency: 'USD',
                             sell: item.rate,
-                            buy: '-'
+                            buy: MISSING_RATE_VALUE,
                         });
                     }
 
@@ -144,7 +150,7 @@ module.exports = function({logger, axios}) {
                         currencyRates.push({
                             currency: 'EUR',
                             sell: item.rate,
-                            buy: '-'
+                            buy: MISSING_RATE_VALUE,
                         });
                     }
                 }

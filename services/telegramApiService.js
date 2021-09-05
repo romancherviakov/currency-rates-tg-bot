@@ -1,6 +1,12 @@
 const moment = require('moment');
 const currencyService = require("./currencyService");
-const { NATIONAL_BANK_TITLE, PRIVAT_BANK_TITLE, MONOBANK_TITLE, PRIVAT_BANK_CARD_TITLE} = require("../constants");
+const { 
+    NATIONAL_BANK_TITLE,
+    PRIVAT_BANK_TITLE,
+    MONOBANK_TITLE,
+    PRIVAT_BANK_CARD_TITLE,
+    MISSING_RATE_VALUE,
+} = require("../constants");
 const titles = {
     [MONOBANK_TITLE]: "Монобанк",
     [NATIONAL_BANK_TITLE]: "Національний банк України",
@@ -58,7 +64,7 @@ module.exports = function({logger, axios}) {
 }
 
 function formatRateValue(value) {
-    return isNumber(value) ? roundTwoDecimals(value) : value;
+    return value === MISSING_RATE_VALUE ? value : roundTwoDecimals(value);
 }
 
 function roundTwoDecimals(value) {
