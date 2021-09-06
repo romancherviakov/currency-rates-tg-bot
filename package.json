@@ -20,6 +20,7 @@
     "moment": "^2.29.1",
     "mysql2": "^2.3.0",
     "node-cron": "^3.0.0",
+    "node-html-parser": "^4.1.4",
     "sequelize": "^6.6.5",
     "winston": "^3.3.3"
   },

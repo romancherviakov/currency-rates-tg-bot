@@ -6,6 +6,7 @@ const {
     MONOBANK_TITLE,
     PRIVAT_BANK_CARD_TITLE,
     MISSING_RATE_VALUE,
+    UKRSIB_BANK_TITLE,
 } = require("../constants");
 const titles = {
     [MONOBANK_TITLE]: "Монобанк",
@@ -13,6 +14,7 @@ const titles = {
     "rates_not_found": "Не вдалось отримати дані. Спробуйте пізніше",
     [PRIVAT_BANK_TITLE]: 'Приват банк у відділеннях',
     [PRIVAT_BANK_CARD_TITLE]: 'Приват банк безготівкові операції',
+    [UKRSIB_BANK_TITLE]: 'Укрсіб курс у кассах',
 };
 const telegramSendMessageAPI = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
 const { isNumber } = require("lodash");

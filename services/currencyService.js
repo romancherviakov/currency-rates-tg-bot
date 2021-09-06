@@ -4,6 +4,8 @@ const MONOBANK_CURRENCY_RATES_URI = 'https://api.monobank.ua/bank/currency';
 const NATIONAL_BANK_RATES_URI = 'https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json';
 const PRIVAT_BANK_RATES_URI = 'https://api.privatbank.ua/p24api/pubinfo?json&exchange&coursid=5';
 const PRIVAT_BANK_CARD_RATES_URI = 'https://api.privatbank.ua/p24api/pubinfo?exchange&json&coursid=11';
+const UKRSIB_CURRENCY_PAGE_URI = 'https://my.ukrsibbank.com/ua/personal/operations/currency_exchange/';
+const { parse } = require('node-html-parser');
 const monobankCurrencyCodes = {
     'USD': 840,
     'EUR': 978,
@@ -17,9 +19,12 @@ const {
     MONOBANK_TITLE,
     PRIVAT_BANK_CARD_TITLE,
     MISSING_RATE_VALUE,
+    UKRSIB_BANK_TITLE
 } = require("../constants");
+const e = require("express");
 
 let monobankCurrencyRatesCached = {};
+let ukrSibBankCurrencyRatesCached = {};
 
 module.exports = function({logger, axios}) {
     return {
@@ -30,11 +35,13 @@ module.exports = function({logger, axios}) {
                 monobankRates,
                 privatBankRates,
                 privatbankCardRates,
+                ukrSibBankRates
             ] = await Promise.all([
                 this.getNationalBankCurrencyRates(),
                 this.getMonobankCurrencyRatesCached(),
                 this.getPrivatBankRates(),
                 this.getPrivatBankRatesCard(),
+                this.getUkrSibCurrencyRatesCached(),
             ]);
 
             if (!isEmpty(nationalBankRates)) {
@@ -53,11 +60,66 @@ module.exports = function({logger, axios}) {
                 ratesCollection.push({ 'title': PRIVAT_BANK_CARD_TITLE, 'rates': privatbankCardRates });
             }
 
+            if (!isEmpty(ukrSibBankRates)) {
+                ratesCollection.push({'title': UKRSIB_BANK_TITLE, 'rates': ukrSibBankRates})
+            }
+
             if(isEmpty(ratesCollection)) {
                 throw new Error(`Unable to receive any rates`);
             }
 
             return ratesCollection;
+        },
+
+        getUkrSibCurrencyRates: async function() {
+            logger.info('Sending UkrSib currency page request...');
+            try {
+                let response = await  axios.get(UKRSIB_CURRENCY_PAGE_URI);
+                let root = parse(response.data);
+                let usdBuy = root.querySelector('.currency__table > tbody').childNodes[1].childNodes[3].childNodes[1].innerText;
+                let usdSell = root.querySelector('.currency__table > tbody').childNodes[1].childNodes[5].childNodes[1].innerText;
+                let eurBuy = root.querySelector('.currency__table > tbody').childNodes[3].childNodes[3].childNodes[1].innerText;
+                let eurSell = root.querySelector('.currency__table > tbody').childNodes[3].childNodes[5].childNodes[1].innerText;
+
+                return [{
+                    currency: 'USD',
+                    sell: usdSell,
+                    buy: usdBuy,
+                }, {
+                    currency: 'EUR',
+                    sell: eurSell,
+                    buy: eurBuy,
+                }];
+            } catch (err) {
+                logger.error(`Unable to receive ukrsib currency page ${err.message}`);
+            }
+
+            return [];
+        },
+
+        getUkrSibCurrencyRatesCached: async function() {
+            logger.info('Reading ukr sib bank currencies from cache...');
+            let now = moment();
+            if (isEmpty(ukrSibBankCurrencyRatesCached)) {
+                let rates = await this.getUkrSibCurrencyRates();
+                ukrSibBankCurrencyRatesCached = {
+                    rates,
+                    time: moment(),
+                }
+            }
+
+            let cacheTime = ukrSibBankCurrencyRatesCached.time;
+            let duration = moment.duration(cacheTime.diff(now));
+            if (duration.asMinutes() > CACHE_TTL_MINUTES) {
+                logger.info('UkrSib bank currencies cache expired');
+                let rates = await this.getUkrSibCurrencyRates();
+                ukrSibBankCurrencyRatesCached = {
+                    rates,
+                    time: moment(),
+                }
+            }
+
+            return ukrSibBankCurrencyRatesCached.rates;
         },
 
         getMonobankCurrencyRatesCached: async function() {
