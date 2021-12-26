@@ -2,7 +2,7 @@ const PRIVAT_BANK_CARD_RATES_URI = 'https://api.privatbank.ua/p24api/pubinfo?exc
 
 module.exports = ({axios, logger}) => {
     return {
-        getTodayRates: () => {
+        getTodayRates: async () => {
             let currencyRates = [];
             logger.info('Reading privat bank currencies...');
             try {

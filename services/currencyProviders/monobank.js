@@ -8,7 +8,7 @@ const monobankCurrencyCodes = {
 
 module.exports = ({axios, logger}) => {
     return {
-        getTodayRates: function() {
+        getTodayRates: async function() {
             let currencyRates = [];
             let response;
             logger.info('Sending monobank get currency request...');
