@@ -1,4 +1,5 @@
 const PRIVAT_BANK_RATES_URI = 'https://api.privatbank.ua/p24api/pubinfo?json&exchange&coursid=5';
+const isArray = require("lodash/isArray");
 
 module.exports = ({axios, logger}) => {
     return {
@@ -12,7 +13,7 @@ module.exports = ({axios, logger}) => {
                     for (const item of response.data) {
                         if (['USD', 'EUR'].includes(item.ccy)) {
                             currencyRates.push({
-                                currency: itemm.ccy,
+                                currency: item.ccy,
                                 sell: item.sale,
                                 buy: item.buy,
                             });

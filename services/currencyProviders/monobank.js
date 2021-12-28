@@ -1,4 +1,5 @@
 const MONOBANK_CURRENCY_RATES_URI = 'https://api.monobank.ua/bank/currency';
+const isArray = require("lodash/isArray");
 
 const monobankCurrencyCodes = {
     'USD': 840,
@@ -21,7 +22,7 @@ module.exports = ({axios, logger}) => {
 
             if (isArray(response.data)) {
                 for (const item of response.data) {
-                    for(['USD', 'EUR'] of currency) {
+                    for(const currency of ['USD', 'EUR']) {
                         if (item.currencyCodeA === monobankCurrencyCodes[currency] && item.currencyCodeB === monobankCurrencyCodes['UAH']) {
                             currencyRates.push({
                                 currency: currency,

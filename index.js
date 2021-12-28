@@ -3,9 +3,14 @@ const Awilix = require('awilix');
 const logger = require("./utils/loggerFactory")();
 const db = require("./models");
 const container = Awilix.createContainer({ injectionMode: Awilix.InjectionMode.PROXY });
-
+const { setup } = require("axios-cache-adapter");
+const axios = setup({
+  cache: {
+    maxAge: 15 * 60 * 1000
+  }
+});
 container.register({
-    axios: Awilix.asValue(require("axios")),
+    axios: Awilix.asValue(axios),
     logger: Awilix.asValue(logger),
     db: Awilix.asValue(db),
 });

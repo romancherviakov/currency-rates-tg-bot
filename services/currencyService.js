@@ -1,35 +1,32 @@
 const {
-    NATIONAL_BANK_TITLE,
-    PRIVAT_BANK_TITLE,
-    MONOBANK_TITLE,
-    PRIVAT_BANK_CARD_TITLE,
-    UKRSIB_BANK_TITLE
+    NBU,
+    PRIVAT,
+    MONOBANK,
+    PRIVAT_CARD,
+    UKRSIB
 } = require("../constants");
+const isEmpty = require('lodash/isEmpty');
 
 module.exports = function ({monobank, privat, privatCard, ukrsib, nbu}) {
     return {
         getAllCurrencyRates: async function () {
-            let [
-                nationalBankRates,
-                monobankRates,
-                privatBankRates,
-                privatbankCardRates,
-                ukrSibBankRates,
-            ] = await Promise.all([
-                nbu.getTodayRates(),
-                monobank.getTodayRates(),
-                privat.getTodayRates(),
-                privatCard.getTodayRates(),
-                ukrsib.getTodayRates(),
-            ]);
+            let providersMap = {
+                [NBU]: nbu,
+                [UKRSIB]: ukrsib,
+                [PRIVAT_CARD]: privatCard,
+                [PRIVAT]: privat,
+                [MONOBANK]: monobank,
+            };
 
-            return [
-                {'title': NATIONAL_BANK_TITLE, 'rates': nationalBankRates},
-                {'title': MONOBANK_TITLE, 'rates': monobankRates},
-                {'title': PRIVAT_BANK_TITLE, 'rates': privatBankRates},
-                {'title': PRIVAT_BANK_CARD_TITLE, 'rates': privatbankCardRates},
-                {'title': UKRSIB_BANK_TITLE, 'rates': ukrSibBankRates},
-            ];
+            let ratesList = [];
+            for (let title in providersMap) {
+                let rates = await providersMap[title].getTodayRates();
+                if (!isEmpty(rates)) {
+                    ratesList.push({title,rates});
+                }
+            }
+
+            return ratesList;
         }
     }
 }

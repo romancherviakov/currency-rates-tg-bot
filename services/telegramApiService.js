@@ -1,20 +1,20 @@
 const moment = require('moment');
 const currencyService = require("./currencyService");
 const { 
-    NATIONAL_BANK_TITLE,
-    PRIVAT_BANK_TITLE,
-    MONOBANK_TITLE,
-    PRIVAT_BANK_CARD_TITLE,
+    NBU,
+    PRIVAT,
+    MONOBANK,
+    PRIVAT_CARD,
     MISSING_RATE_VALUE,
-    UKRSIB_BANK_TITLE,
+    UKRSIB,
 } = require("../constants");
 const titles = {
-    [MONOBANK_TITLE]: "Монобанк",
-    [NATIONAL_BANK_TITLE]: "Національний банк України",
+    [MONOBANK]: "Монобанк",
+    [NBU]: "Національний банк України",
     "rates_not_found": "Не вдалось отримати дані. Спробуйте пізніше",
-    [PRIVAT_BANK_TITLE]: 'Приват банк у відділеннях',
-    [PRIVAT_BANK_CARD_TITLE]: 'Приват банк безготівкові операції',
-    [UKRSIB_BANK_TITLE]: 'Укрсіб курс у кассах',
+    [PRIVAT]: 'Приват банк у відділеннях',
+    [PRIVAT_CARD]: 'Приват банк безготівкові операції',
+    [UKRSIB]: 'Укрсіб курс у кассах',
 };
 const telegramSendMessageAPI = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
 const { isNumber } = require("lodash");

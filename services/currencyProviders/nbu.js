@@ -1,5 +1,5 @@
 const isArray = require("lodash/isArray");
-const {MISSING_RATE_VALUE} = require("../constants");
+const {MISSING_RATE_VALUE} = require("../../constants");
 const NATIONAL_BANK_RATES_URI = 'https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json';
 
 module.exports = ({logger, axios}) => {
