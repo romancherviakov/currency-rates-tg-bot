@@ -1,7 +1,8 @@
+const awilix = require("awilix");
 const winston = require("winston");
 
-module.exports  = () => {
-    return winston.createLogger({
+module.exports = (container) => {
+    const logger = winston.createLogger({
         level: 'info',
         format: winston.format.json(),
         transports: [
@@ -15,4 +16,10 @@ module.exports  = () => {
             })
         ],
     });
-};
+
+    container.register({
+        logger: awilix.asValue(logger),
+    });
+
+    return container;
+}

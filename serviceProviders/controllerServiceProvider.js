@@ -1,5 +1,5 @@
-const callbackController = require("./callbackController");
-const healthController = require("./healthController");
+const callbackController = require("./../controllers/callbackController");
+const healthController = require("./../controllers/healthController");
 const awilix = require("awilix");
 
 module.exports = (container) => {
@@ -7,4 +7,6 @@ module.exports = (container) => {
         healthController: awilix.asFunction(healthController),
         callbackController: awilix.asFunction(callbackController)
     });
+
+    return container;
 }
