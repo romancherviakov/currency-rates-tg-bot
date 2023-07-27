@@ -1,5 +1,8 @@
 const MONOBANK_CURRENCY_RATES_URI = 'https://api.monobank.ua/bank/currency';
 const isArray = require("lodash/isArray");
+const winston = require("winston");
+const axios = require('axios');
+
 
 const monobankCurrencyCodes = {
     'USD': 840,
@@ -7,7 +10,12 @@ const monobankCurrencyCodes = {
     'UAH': 980
 };
 
-module.exports = ({axios, logger}) => {
+/**
+ * 
+ * @param {axios.AxiosInstance} axios 
+ * @param {winston.Logger} logger 
+ */
+module.exports = (axios, logger) => {
     return {
         getTodayRates: async function() {
             let currencyRates = [];

@@ -16,7 +16,7 @@ const validationSchemas = {
 const START_COMMAND = '/start';
 const GET_CURRENCY_RATES = '/rates';
 
-module.exports = function({userService, logger, currencyService, telegramApiService}) {
+module.exports = function(userService, logger, currencyService, telegramApiService) {
     return {
         callbackAction: async (req, res) => {
             let requestData = req.body;

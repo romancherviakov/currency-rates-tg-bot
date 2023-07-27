@@ -19,7 +19,7 @@ const titles = {
 const telegramSendMessageAPI = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
 const { isNumber } = require("lodash");
 
-module.exports = function({logger, axios}) {
+module.exports = function(logger, axios) {
     const sendTelegramMessage = async function(chatId, message) {
         try {
             await axios.get(telegramSendMessageAPI, {

@@ -4,7 +4,7 @@ const ratesSchedule = [
     '10:00',
 ];
 
-module.exports = ({userService, logger, telegramApiService, currencyService}) => {
+module.exports = (userService, logger, telegramApiService, currencyService) => {
     const isTimeForNotification = () => {
         let now = moment().format('HH:mm');
         return ratesSchedule.includes(now)

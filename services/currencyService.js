@@ -7,7 +7,7 @@ const {
 } = require("../constants");
 const isEmpty = require('lodash/isEmpty');
 
-module.exports = function ({monobank, privat, privatCard, ukrsib, nbu}) {
+module.exports = function (monobank, privat, privatCard, ukrsib, nbu) {
     return {
         getAllCurrencyRates: async function () {
             let providersMap = {

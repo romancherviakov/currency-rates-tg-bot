@@ -2,7 +2,7 @@ const UKRSIB_CURRENCY_PAGE_URI = 'https://my.ukrsibbank.com/ua/personal/operatio
 const selectorPath = '.currency__table > tbody';
 const { parse } = require('node-html-parser');
 
-module.exports = ({logger, axios}) => {
+module.exports = (logger, axios) => {
     return {
         getTodayRates: async () => {
             logger.info('Sending UkrSib currency page request...');

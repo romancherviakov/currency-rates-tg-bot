@@ -1,7 +1,7 @@
 const PRIVAT_BANK_CARD_RATES_URI = 'https://api.privatbank.ua/p24api/pubinfo?exchange&json&coursid=11';
 const isArray = require("lodash/isArray");
 
-module.exports = ({axios, logger}) => {
+module.exports = (axios, logger) => {
     return {
         getTodayRates: async () => {
             let currencyRates = [];
