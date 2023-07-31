@@ -2,7 +2,8 @@ const MONOBANK_CURRENCY_RATES_URI = 'https://api.monobank.ua/bank/currency';
 const isArray = require("lodash/isArray");
 const winston = require("winston");
 const axios = require('axios');
-
+const MONOBANK_CACHE_RATES = 'MONOBANK_CACHE_RATES';
+const TTL_1_MINUTE = 60;
 
 const monobankCurrencyCodes = {
     'USD': 840,
@@ -15,9 +16,16 @@ const monobankCurrencyCodes = {
  * @param {axios.AxiosInstance} axios 
  * @param {winston.Logger} logger 
  */
-module.exports = (axios, logger) => {
+module.exports = (axios, logger, redisClient) => {
     return {
         getTodayRates: async function() {
+
+            const cachedCurrencyRates = await redisClient.get(MONOBANK_CACHE_RATES);
+
+            if (cachedCurrencyRates) {
+                return cachedCurrencyRates;
+            }
+
             let currencyRates = [];
             let response;
             logger.info('Sending monobank get currency request...');
@@ -41,6 +49,11 @@ module.exports = (axios, logger) => {
                     }
                 }
             }
+
+            await redisClient.set(MONOBANK_CACHE_RATES, JSON.stringify(currencyRates), {
+                EX: TTL_1_MINUTE,
+                NX: true
+            });
 
             return currencyRates;
         }
