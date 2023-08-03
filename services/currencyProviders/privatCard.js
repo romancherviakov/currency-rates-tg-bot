@@ -13,7 +13,7 @@ module.exports = (axios, logger) => {
                     for (const item of response.data) {
                         if (['USD', 'EUR'].includes(item.ccy)) {
                             currencyRates.push({
-                                currency: itemm.ccy,
+                                currency: item.ccy,
                                 sell: item.sale,
                                 buy: item.buy,
                             });

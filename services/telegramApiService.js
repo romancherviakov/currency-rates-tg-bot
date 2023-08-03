@@ -35,11 +35,19 @@ module.exports = function(logger, axios) {
     }
 
     const prepareMessage = function(ratesCollections) {
-        let message = `Курс валют на сьогодні ${moment().format('DD/MM/YYYY')}: \n\n`;
+        let message = `Курс валют у банках 💰🇺🇦 станом на ${moment().format('DD/MM/YYYY hh:mm')} \n\n`;
         for (const rateCollection of ratesCollections) {
-            message += titles[rateCollection.title] + ":\n";
+            message += "<i>" + titles[rateCollection.title] + "</i>:\n";
             for (const rate of rateCollection.rates) {
-                message+= `${rate.currency} продаж: <b>${formatRateValue(rate.sell)}</b>, купівля: <b>${formatRateValue(rate.buy)}</b>\n`;
+                let currencyEmoji = '';
+
+                if (rate.currency === 'USD') {
+                    currencyEmoji = '💲';
+                } else if (rate.currency === 'EUR') {
+                    currencyEmoji = '💶';
+                } 
+
+                message+= `${rate.currency} ${currencyEmoji} продаж: <b>${formatRateValue(rate.sell)} грн.</b>, купівля: <b>${formatRateValue(rate.buy)} грн.</b>\n`;
             }
             message += "\n";
         }

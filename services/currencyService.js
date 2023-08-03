@@ -16,7 +16,7 @@ module.exports = function (monobank, privat, privatCard, ukrsib, nbu, redisClien
 
                 if (cachedRates) {
 
-                    return cachedRates;
+                    return JSON.parse(cachedRates);
                 }
 
                 let providersMap = {

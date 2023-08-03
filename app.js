@@ -46,6 +46,7 @@ const currencyService = require("./services/currencyService")(
     redisClient,
     logger
 );
+
 const userService = require("./services/userService")(db);
 const telegramApiService = require("./services/telegramApiService")(logger, axios);
 const notificationService = require("./services/notificationService")(

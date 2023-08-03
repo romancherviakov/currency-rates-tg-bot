@@ -1,4 +1,4 @@
-const UKRSIB_CURRENCY_PAGE_URI = 'https://my.ukrsibbank.com/ua/personal/operations/currency_exchange/';
+const UKRSIB_CURRENCY_PAGE_URI = 'https://ukrsibbank.com/currency-cash/';
 const selectorPath = '.currency__table > tbody';
 const { parse } = require('node-html-parser');
 
